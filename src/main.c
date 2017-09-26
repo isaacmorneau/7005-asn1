@@ -1,18 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/epoll.h>
-#include <errno.h>
 #include <getopt.h>
 
-#include "socket.h"
+#include "server.h"
 
-#define MAXEVENTS 64
 #define SOCKOPTS "csitrhp:a:f:"
 
 void print_help(){
@@ -33,6 +29,16 @@ int main (int argc, char *argv[]) {
         return 0;
     }
     int c;
+
+    bool server_mode = 0;
+    bool client_mode = 0;
+    bool interactive = 0;
+    bool transmit = 0;
+    bool recieve = 0;
+
+    char * port = 0;
+    char * address = 0;
+    char * file = 0;
 
     while (1) {
         int option_index = 0;
@@ -57,34 +63,50 @@ int main (int argc, char *argv[]) {
 
         switch (c) {
             case 'c':
+                if (server_mode) {
+                    printf("Server and client requested, exiting\n");
+                    return 1;
+                }
+                client_mode = 1;
                 printf("client\n");
                 break;
 
             case 's':
+                if (client_mode) {
+                    printf("Client and server requested, exiting\n");
+                    return 1;
+                }
+                server_mode = 1;
                 printf("server\n");
                 break;
 
             case 'i':
+                interactive = 1;
                 printf("interactive\n");
                 break;
 
             case 't':
+                transmit = 1;
                 printf("transmit\n");
                 break;
 
             case 'r':
+                recieve = 1;
                 printf("recieve\n");
                 break;
 
             case 'p':
+                port = optarg;
                 printf("port with value '%s'\n", optarg);
                 break;
 
             case 'a':
+                address = optarg;
                 printf("address with value '%s'\n", optarg);
                 break;
 
             case 'f':
+                file = optarg;
                 printf("file with value '%s'\n", optarg);
                 break;
 
@@ -95,156 +117,13 @@ int main (int argc, char *argv[]) {
                 return 0;
         }
     }
-
-    int sfd, s;
-    int efd;
-    struct epoll_event event;
-    struct epoll_event *events;
-
-    if (argc != 2) {
-        fprintf (stderr, "Usage: %s [port]\n", argv[0]);
-        exit (EXIT_FAILURE);
+    if (server_mode) {
+        return server(port);
+    } else if (client_mode) {
+        //call client code
+    } else {
+        printf("Mode not specified, exiting\n");
+        return -1;
     }
 
-    sfd = make_bound(argv[1]);
-    if (sfd == -1) {
-        abort ();
-    }
-
-    s = make_non_blocking (sfd);
-    if (s == -1) {
-        abort ();
-    }
-
-    s = listen(sfd, SOMAXCONN);
-    if (s == -1) {
-        perror ("listen");
-        abort ();
-    }
-
-    efd = epoll_create1(0);
-    if (efd == -1) {
-        perror ("epoll_create");
-        abort ();
-    }
-
-    event.data.fd = sfd;
-    event.events = EPOLLIN | EPOLLET;
-    s = epoll_ctl(efd, EPOLL_CTL_ADD, sfd, &event);
-    if (s == -1) {
-        perror ("epoll_ctl");
-        abort ();
-    }
-
-    /* Buffer where events are returned */
-    events = calloc(MAXEVENTS, sizeof event);
-
-    /* The event loop */
-    while (1) {
-        int n, i;
-
-        n = epoll_wait(efd, events, MAXEVENTS, -1);
-        for (i = 0; i < n; i++) {
-            if ((events[i].events & EPOLLERR) ||
-                    (events[i].events & EPOLLHUP) ||
-                    (!(events[i].events & EPOLLIN))) {
-                /* An error has occured on this fd, or the socket is not
-                   ready for reading (why were we notified then?) */
-                fprintf (stderr, "epoll error\n");
-                close (events[i].data.fd);
-                continue;
-            } else if (sfd == events[i].data.fd) {
-                /* We have a notification on the listening socket, which
-                   means one or more incoming connections. */
-                while (1) {
-                    struct sockaddr in_addr;
-                    socklen_t in_len;
-                    int infd;
-                    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-
-                    in_len = sizeof in_addr;
-                    infd = accept(sfd, &in_addr, &in_len);
-                    if (infd == -1) {
-                        if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                            /* We have processed all incoming
-                               connections. */
-                            break;
-                        } else {
-                            perror ("accept");
-                            break;
-                        }
-                    }
-
-                    s = getnameinfo(&in_addr, in_len, hbuf, sizeof hbuf, sbuf, sizeof sbuf, NI_NUMERICHOST | NI_NUMERICSERV);
-                    if (s == 0) {
-                        printf("Accepted connection on descriptor %d "
-                                "(host=%s, port=%s)\n", infd, hbuf, sbuf);
-                    }
-
-                    /* Make the incoming socket non-blocking and add it to the
-                       list of fds to monitor. */
-                    s = make_non_blocking(infd);
-                    if (s == -1) {
-                        abort ();
-                    }
-
-                    event.data.fd = infd;
-                    event.events = EPOLLIN | EPOLLET;
-                    s = epoll_ctl(efd, EPOLL_CTL_ADD, infd, &event);
-                    if (s == -1) {
-                        perror ("epoll_ctl");
-                        abort ();
-                    }
-                }
-                continue;
-            } else {
-                /* We have data on the fd waiting to be read. Read and
-                   display it. We must read whatever data is available
-                   completely, as we are running in edge-triggered mode
-                   and won't get a notification again for the same
-                   data. */
-                int done = 0;
-
-                while (1) {
-                    ssize_t count;
-                    char buf[512];
-
-                    count = read(events[i].data.fd, buf, sizeof buf);
-                    if (count == -1) {
-                        /* If errno == EAGAIN, that means we have read all
-                           data. So go back to the main loop. */
-                        if (errno != EAGAIN) {
-                            perror ("read");
-                            done = 1;
-                        }
-                        break;
-                    } else if (count == 0) {
-                        /* End of file. The remote has closed the
-                           connection. */
-                        done = 1;
-                        break;
-                    }
-
-                    /* Write the buffer to standard output */
-                    s = write (1, buf, count);
-                    if (s == -1) {
-                        perror ("write");
-                        abort ();
-                    }
-                }
-
-                if (done) {
-                    printf ("Closed connection on descriptor %d\n",
-                            events[i].data.fd);
-
-                    /* Closing the descriptor will make epoll remove it
-                       from the set of descriptors which are monitored. */
-                    close (events[i].data.fd);
-                }
-            }
-        }
-    }
-    free (events);
-    close (sfd);
-    return 0;
 }

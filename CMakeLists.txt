@@ -12,6 +12,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_definitions(-D_POSIX_C_SOURCE=200809L)
@@ -23,6 +25,8 @@ set(MAIN
     src/main.c
     src/socket.c
     src/socket.h
+    src/server.c
+    src/server.h
     )
 
 add_executable(7005-Asn1 ${MAIN})
