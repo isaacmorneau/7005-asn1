@@ -14,14 +14,14 @@ int make_non_blocking (int sfd) {
 
     flags = fcntl(sfd, F_GETFL, 0);
     if (flags == -1){
-        perror("fcntl");
+        perror("fcntl get");
         return -1;
     }
 
     flags |= O_NONBLOCK;
     s = fcntl(sfd, F_SETFL, flags);
     if (s == -1) {
-        perror("fcntl");
+        perror("fcntl set");
         return -1;
     }
 
@@ -34,9 +34,9 @@ int make_bound(char *port) {
     int s, sfd;
 
     memset(&hints, 0, sizeof (struct addrinfo));
-    hints.ai_family = AF_UNSPEC;     /* Return IPv4 and IPv6 choices */
-    hints.ai_socktype = SOCK_STREAM; /* We want a TCP socket */
-    hints.ai_flags = AI_PASSIVE;     /* All interfaces */
+    hints.ai_family = AF_UNSPEC;     // Return IPv4 and IPv6 choices
+    hints.ai_socktype = SOCK_STREAM; // We want a TCP socket
+    hints.ai_flags = AI_PASSIVE;     // All interfaces
 
     s = getaddrinfo(NULL, port, &hints, &result);
     if (s != 0) {
@@ -59,7 +59,7 @@ int make_bound(char *port) {
     }
 
     if (!rp) {
-        fprintf(stderr, "Could not bind\n");
+        fprintf(stderr, "Unable to bind\n");
         return -1;
     }
 

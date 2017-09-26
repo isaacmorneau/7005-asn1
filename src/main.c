@@ -8,12 +8,94 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <errno.h>
+#include <getopt.h>
 
 #include "socket.h"
 
 #define MAXEVENTS 64
+#define SOCKOPTS "csitrhp:a:f:"
+
+void print_help(){
+    printf("[c]lient - set the mode to client\n"
+            "[s]erver - set the mode to server\n"
+            "[p]ort <1-65535>> - the port to listen on for server, the port to recieve on for client\n"
+            "[a]ddress <ip or url> - only used by client for connecting to a server\n"
+            "[i]nteractive - only used by the client for setting mode to interactive\n"
+            "[t]ransmit - set connection mode to SEND\n"
+            "[r]ecieve - set connection mode to GET\n"
+            "[f]ile <path> - the location of the file you send or want to recieve\n"
+            "[h]elp - this message\n");
+}
 
 int main (int argc, char *argv[]) {
+    if (argc == 1) {
+        print_help();
+        return 0;
+    }
+    int c;
+
+    while (1) {
+        int option_index = 0;
+
+        static struct option long_options[] = {
+            {"client",      no_argument,       0, 'c' },
+            {"server",      no_argument,       0, 's' },
+            {"interactive", no_argument,       0, 'i' },
+            {"help",        no_argument,       0, 'h' },
+            {"transmit",    no_argument,       0, 't' },
+            {"recieve",     no_argument,       0, 'r' },
+            {"port",        required_argument, 0, 'p' },
+            {"address",     required_argument, 0, 'a' },
+            {"file",        required_argument, 0, 'f' },
+            {0,             0,                 0, 0   }
+        };
+
+        c = getopt_long(argc, argv, SOCKOPTS, long_options, &option_index);
+        if (c == -1) {
+            break;
+        }
+
+        switch (c) {
+            case 'c':
+                printf("client\n");
+                break;
+
+            case 's':
+                printf("server\n");
+                break;
+
+            case 'i':
+                printf("interactive\n");
+                break;
+
+            case 't':
+                printf("transmit\n");
+                break;
+
+            case 'r':
+                printf("recieve\n");
+                break;
+
+            case 'p':
+                printf("port with value '%s'\n", optarg);
+                break;
+
+            case 'a':
+                printf("address with value '%s'\n", optarg);
+                break;
+
+            case 'f':
+                printf("file with value '%s'\n", optarg);
+                break;
+
+            case 'h':
+            case '?':
+            default:
+                print_help();
+                return 0;
+        }
+    }
+
     int sfd, s;
     int efd;
     struct epoll_event event;
