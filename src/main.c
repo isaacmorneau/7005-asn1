@@ -12,15 +12,16 @@
 #define SOCKOPTS "csitrhp:a:f:"
 
 void print_help(){
-    printf("[c]lient - set the mode to client\n"
-            "[s]erver - set the mode to server\n"
-            "[p]ort <1-65535>> - the port to listen on for server, the port to recieve on for client\n"
-            "[a]ddress <ip or url> - only used by client for connecting to a server\n"
-            "[i]nteractive - only used by the client for setting mode to interactive\n"
-            "[t]ransmit - set connection mode to SEND\n"
-            "[r]ecieve - set connection mode to GET\n"
-            "[f]ile <path> - the location of the file you send or want to recieve\n"
-            "[h]elp - this message\n");
+    printf("usage options:\n"
+            "\t[c]lient - set the mode to client\n"
+            "\t[s]erver - set the mode to server\n"
+            "\t[p]ort <1-65535>> - the port to listen on for server, the port to recieve on for client\n"
+            "\t[a]ddress <ip or url> - only used by client for connecting to a server\n"
+            "\t[i]nteractive - only used by the client for setting mode to interactive\n"
+            "\t[t]ransmit - set connection mode to SEND\n"
+            "\t[r]ecieve - set connection mode to GET\n"
+            "\t[f]ile <path> - the location of the file you send or want to recieve\n"
+            "\t[h]elp - this message\n");
 }
 
 int main (int argc, char *argv[]) {
