@@ -3,5 +3,6 @@
 
 int make_non_blocking(int sfd);
 int make_bound(char *port);
+int make_connected(char * address, char *port);
 
 #endif

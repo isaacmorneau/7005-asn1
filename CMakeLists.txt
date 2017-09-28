@@ -26,6 +26,8 @@ set(MAIN
     src/socket.h
     src/server.c
     src/server.h
+    src/client.c
+    src/client.h
     )
 
 add_executable(7005-Asn1 ${MAIN})

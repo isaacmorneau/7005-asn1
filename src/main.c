@@ -8,6 +8,7 @@
 #include <getopt.h>
 
 #include "server.h"
+#include "client.h"
 
 #define SOCKOPTS "csitrhp:a:f:"
 
@@ -34,8 +35,7 @@ int main (int argc, char *argv[]) {
     bool server_mode = 0;
     bool client_mode = 0;
     bool interactive = 0;
-    bool transmit = 0;
-    bool recieve = 0;
+    bool connect_mode = 0;
 
     char * port = 0;
     char * address = 0;
@@ -87,12 +87,12 @@ int main (int argc, char *argv[]) {
                 break;
 
             case 't':
-                transmit = 1;
+                connect_mode = 1;
                 printf("transmit\n");
                 break;
 
             case 'r':
-                recieve = 1;
+                connect_mode = 2;
                 printf("recieve\n");
                 break;
 
@@ -118,10 +118,13 @@ int main (int argc, char *argv[]) {
                 return 0;
         }
     }
+
+    //TODO do error checking for missing commands
+
     if (server_mode) {
         return server(port);
     } else if (client_mode) {
-        //call client code
+        return client(address, port, file, connect_mode);
     } else {
         printf("Mode not specified, exiting\n");
         return -1;
