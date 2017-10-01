@@ -12,6 +12,7 @@
 
 #include "server.h"
 #include "socket.h"
+#include "file.h"
 
 #define MAXEVENTS 64
 #define MAXFDS 65636
@@ -162,9 +163,10 @@ int server(char * port) {
                         }
 
                         if (*buf == 'S') { // uploading a file
-                            s = sock_to_files[datafd] = open((buf+2), O_WRONLY);
+                            printf("uploading '%s'\n", (buf+2));
+                            s = sock_to_files[datafd] = fileno(fopen((buf+2), "w"));
                             if (s = -1) {
-                                perror("fopen");
+                                perror("open");
                                 close(events[i].data.fd);
                                 continue;
                             }
@@ -174,13 +176,7 @@ int server(char * port) {
                             printf("Malformed request: '%s'", buf);
                         }
                     }
-
-                    // Write the buffer to standard output
-                    s = write(output_fd, buf, count);
-                    if (s == -1) {
-                        perror("write");
-                        abort();
-                    }
+                    zero_copy_read(events[i].data.fd, sock_to_files[events[i].data.fd]);
                 }
 
                 if (done) {
