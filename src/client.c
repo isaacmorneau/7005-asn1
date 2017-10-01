@@ -12,9 +12,11 @@
 #include "socket.h"
 #include "file.h"
 
+#define DEFAULT_BUFF 1024
 
 int client(char * address, char * port, char * filepath, int connect_mode) {
     int datafd, sockfd, acceptedfd, filefd;
+    char buf[DEFAULT_BUFF];
     sockfd = make_connected(address, port);
     if (sockfd == -1) {
         return 1;
@@ -32,8 +34,8 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
             close(datafd);
             return 3;
         }
-        if (write(sockfd, "S ", 2) == -1
-                || write(sockfd, filepath, strlen(filepath)) == -1) {
+        sprintf(buf, "S %s", filepath);
+        if (write(sockfd, buf, strlen(buf)) == -1) {
             perror("write");
             close(sockfd);
             close(datafd);
@@ -47,8 +49,8 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
             close(datafd);
             return 5;
         }
-        if (write(sockfd, "G ", 2) == -1
-                || write(sockfd, filepath, strlen(filepath)) == -1) {
+        sprintf(buf, "G %s", filepath);
+        if (write(sockfd, buf, strlen(buf)) == -1) {
             perror("write");
             close(sockfd);
             close(datafd);
