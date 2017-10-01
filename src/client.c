@@ -27,7 +27,7 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
     }
 
     if (connect_mode == 1) {//send
-        filefd = open(filepath, O_RDONLY);
+        filefd = fileno(fopen(filepath, "r"));
         if (filefd == 1) {
             perror("open");
             close(sockfd);
@@ -42,7 +42,7 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
             return 4;
         }
     } else if (connect_mode == 2) {//request
-        filefd = open(filepath, O_WRONLY);
+        filefd = fileno(fopen(filepath, "w"));
         if (filefd == 1) {
             perror("open");
             close(sockfd);
