@@ -10,7 +10,7 @@
 #include "server.h"
 #include "client.h"
 
-#define SOCKOPTS "csitrhp:a:f:"
+#define SOCKOPTS "cstrhp:a:f:"
 
 void print_help(){
     printf("usage options:\n"
@@ -18,7 +18,6 @@ void print_help(){
             "\t[s]erver - set the mode to server\n"
             "\t[p]ort <1-65535>> - the port to listen on for server, the port to recieve on for client\n"
             "\t[a]ddress <ip or url> - only used by client for connecting to a server\n"
-            "\t[i]nteractive - only used by the client for setting mode to interactive\n"
             "\t[t]ransmit - set connection mode to SEND\n"
             "\t[r]ecieve - set connection mode to GET\n"
             "\t[f]ile <path> - the location of the file you send or want to recieve\n"
@@ -34,7 +33,6 @@ int main (int argc, char *argv[]) {
 
     bool server_mode = 0;
     bool client_mode = 0;
-    bool interactive = 0;
     bool connect_mode = 0;
 
     char * port = 0;
@@ -47,7 +45,6 @@ int main (int argc, char *argv[]) {
         static struct option long_options[] = {
             {"client",      no_argument,       0, 'c' },
             {"server",      no_argument,       0, 's' },
-            {"interactive", no_argument,       0, 'i' },
             {"help",        no_argument,       0, 'h' },
             {"transmit",    no_argument,       0, 't' },
             {"recieve",     no_argument,       0, 'r' },
@@ -71,7 +68,6 @@ int main (int argc, char *argv[]) {
                 client_mode = 1;
                 printf("client\n");
                 break;
-
             case 's':
                 if (client_mode) {
                     printf("Client and server requested, exiting\n");
@@ -80,37 +76,26 @@ int main (int argc, char *argv[]) {
                 server_mode = 1;
                 printf("server\n");
                 break;
-
-            case 'i':
-                interactive = 1;
-                printf("interactive\n");
-                break;
-
             case 't':
                 connect_mode = 1;
                 printf("transmit\n");
                 break;
-
             case 'r':
                 connect_mode = 2;
                 printf("recieve\n");
                 break;
-
             case 'p':
                 port = optarg;
                 printf("port with value '%s'\n", optarg);
                 break;
-
             case 'a':
                 address = optarg;
                 printf("address with value '%s'\n", optarg);
                 break;
-
             case 'f':
                 file = optarg;
                 printf("file with value '%s'\n", optarg);
                 break;
-
             case 'h':
             case '?':
             default:
@@ -119,11 +104,9 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    //TODO do error checking for missing commands
-
     if (server_mode) {
         return server(port);
-    } else if (client_mode) {
+    } else if (client_mode && connect_mode) {
         return client(address, port, file, connect_mode);
     } else {
         printf("Mode not specified, exiting\n");

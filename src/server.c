@@ -122,11 +122,9 @@ int server(char * port) {
                 }
                 continue;
             } else {
-                // We have data on the fd waiting to be read. Read and
-                // display it. We must read whatever data is available
-                // completely, as we are running in edge-triggered mode
-                // and won't get a notification again for the same
-                // data.
+                struct sockaddr in_addr;
+                socklen_t in_len;
+                char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
                 int done = 0;
                 int output_fd;
 
@@ -156,9 +154,35 @@ int server(char * port) {
                         break;
                     }
 
+                    if (output_fd == 1) { //its a command
+                        buf[count] = 0;
+
+                        if (getnameinfo(&in_addr, in_len, hbuf, sizeof hbuf, sbuf, sizeof sbuf, NI_NUMERICHOST | NI_NUMERICSERV)) {
+                            perror("getnameinfo");
+                            close(events[i].data.fd);
+                            continue;
+                        }
+                        int datafd = make_connected(hbuf, port);
+                        if(datafd == -1) {
+                            close(events[i].data.fd);
+                            continue;
+                        }
+                        if (*buf == 'S') { // uploading a file
+                            s = sock_to_files[datafd] = open((buf+2), O_WRONLY);
+                            if (s = -1) {
+                                perror("fopen");
+                                close(events[i].data.fd);
+                                continue;
+                            }
+                        } else if (*buf == 'G') {//downloading a file
+                            //spawn off a thread to download the whole file blocking
+                        } else {
+                            printf("Malformed request: '%s'", buf);
+                        }
+                    }
+
                     // Write the buffer to standard output
                     s = write(output_fd, buf, count);
-                    //TODO here is were i need to check for commands
                     if (s == -1) {
                         perror("write");
                         abort();
