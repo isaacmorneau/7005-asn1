@@ -51,7 +51,6 @@ int make_connected(char * address, char * port) {
 
         s = connect(sfd, rp->ai_addr, rp->ai_addrlen);
         if (s == 0) {
-            // We managed to bind successfully!
             break;
         }
 
@@ -107,4 +106,30 @@ int make_bound(char * port) {
 
     return sfd;
 }
+int make_reverse_connected(int sockfd, char * port) {
+    struct sockaddr_in addr;
+    socklen_t len;
 
+    if (getpeername(sockfd, (struct sockaddr *) &addr, &len) == -1) {
+        perror("getpeername");
+        return -1;
+    }
+
+    addr.sin_port = htons(atoi(port));
+
+    int sfd;
+    sfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sfd == -1) {
+        perror("socket");
+        return -1;
+    }
+
+    if (connect(sfd, (struct sockaddr*)&addr, len) == -1) {
+        perror("socket");
+        return -1;
+    }
+
+    close(sfd);
+
+    return sfd;
+}

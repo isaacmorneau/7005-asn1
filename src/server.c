@@ -26,24 +26,24 @@ int server(char * port) {
 
     sfd = make_bound(port);
     if (sfd == -1) {
-        abort();
+        return 1;
     }
 
     s = make_non_blocking(sfd);
     if (s == -1) {
-        abort();
+        return 2;
     }
 
     s = listen(sfd, SOMAXCONN);
     if (s == -1) {
         perror("listen");
-        abort();
+        return 3;
     }
 
     efd = epoll_create1(0);
     if (efd == -1) {
         perror ("epoll_create");
-        abort();
+        return 4;
     }
 
     event.data.fd = sfd;
@@ -51,7 +51,7 @@ int server(char * port) {
     s = epoll_ctl(efd, EPOLL_CTL_ADD, sfd, &event);
     if (s == -1) {
         perror("epoll_ctl");
-        abort();
+        return 5;
     }
 
     // Buffer where events are returned
@@ -122,9 +122,6 @@ int server(char * port) {
                 }
                 continue;
             } else {
-                struct sockaddr in_addr;
-                socklen_t in_len;
-                char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
                 int done = 0;
                 int output_fd;
 
@@ -157,16 +154,13 @@ int server(char * port) {
                     if (output_fd == 1) { //its a command
                         buf[count] = 0;
 
-                        if (getnameinfo(&in_addr, in_len, hbuf, sizeof hbuf, sbuf, sizeof sbuf, NI_NUMERICHOST | NI_NUMERICSERV)) {
-                            perror("getnameinfo");
-                            close(events[i].data.fd);
-                            continue;
-                        }
-                        int datafd = make_connected(hbuf, port);
+                        int datafd = make_reverse_connected(events[i].data.fd, port);
+
                         if(datafd == -1) {
                             close(events[i].data.fd);
                             continue;
                         }
+
                         if (*buf == 'S') { // uploading a file
                             s = sock_to_files[datafd] = open((buf+2), O_WRONLY);
                             if (s = -1) {

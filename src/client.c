@@ -17,11 +17,11 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
     int datafd, sockfd, acceptedfd, filefd;
     sockfd = make_connected(address, port);
     if (sockfd == -1) {
-        return -1;
+        return 1;
     }
     datafd = make_bound(port);
-    if (datafd) {
-        return -1;
+    if (datafd == -1) {
+        return 2;
     }
 
     if (connect_mode == 1) {//send
@@ -30,14 +30,14 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
             perror("open");
             close(sockfd);
             close(datafd);
-            return -1;
+            return 3;
         }
         if (write(sockfd, "S ", 2) == -1
                 || write(sockfd, filepath, strlen(filepath)) == -1) {
             perror("write");
             close(sockfd);
             close(datafd);
-            return -1;
+            return 4;
         }
     } else if (connect_mode == 2) {//request
         filefd = open(filepath, O_WRONLY);
@@ -45,22 +45,22 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
             perror("open");
             close(sockfd);
             close(datafd);
-            return -1;
+            return 5;
         }
         if (write(sockfd, "G ", 2) == -1
                 || write(sockfd, filepath, strlen(filepath)) == -1) {
             perror("write");
             close(sockfd);
             close(datafd);
-            return -1;
+            return 6;
         }
     }
 
-    if (listen(sockfd, 1) == -1) {
+    if (listen(datafd, 1) == -1) {
         perror("listen");
         close(datafd);
         close(sockfd);
-        return -1;
+        return 7;
     }
 
     acceptedfd = accept(datafd, 0, 0);
@@ -68,7 +68,7 @@ int client(char * address, char * port, char * filepath, int connect_mode) {
         perror("accept");
         close(datafd);
         close(sockfd);
-        return -1;
+        return 8;
     }
     close(datafd);
 
