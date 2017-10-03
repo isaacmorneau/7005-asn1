@@ -1,3 +1,17 @@
+/*
+ * SOURCE FILE: client.c - The functions for running the client side of the application
+ *
+ * PROGRAM: 70050Asn1
+ *
+ * DATE: Sept 30, 2017
+ *
+ * FUNCTIONS:
+ *  int client(char * address, char * port, char * data, char * filepath, int connect_mode);
+ *
+ * DESIGNER: Isaac Morneau
+ *
+ * PROGRAMMER: Isaac Morneau
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -14,6 +28,29 @@
 
 #define DEFAULT_BUF 1024
 
+/*
+ *  FUNCTION: client
+ *
+ *  DATE:
+ *  Sept. 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int client(char * address, char * port, char * data, char * filepath, int connect_mode);
+ *
+ *  PARAMETERS:
+ *      char * address  - The address to connect to
+ *      char * port     - The port to connect to for commands
+ *      char * data     - The data port for file transfers
+ *      char * filepath - The file to request or transmit
+ *      int connect_mode- The mode, 1 for Send 2 for Get
+ *
+ *  RETURNS:
+ *  int - returns 0 for no error or positive int to indicate error
+ */
 int client(char * address, char * port, char * data, char * filepath, int connect_mode) {
     int datafd, sockfd, acceptedfd, filefd;
     char buf[DEFAULT_BUF];
@@ -72,7 +109,7 @@ int client(char * address, char * port, char * data, char * filepath, int connec
             perror("fopen write");
             close(sockfd);
             close(datafd);
-            return 5;
+            return 7;
         }
         filefd = fileno(fp);
         sprintf(buf, "G %s", filepath);
@@ -97,7 +134,7 @@ int client(char * address, char * port, char * data, char * filepath, int connec
                 perror("read data file");
                 close(acceptedfd);
                 close(filefd);
-                break;
+                return 9;
             }
             if (write(acceptedfd, buf, count) == -1) {
                 perror("write data socket");
@@ -118,7 +155,7 @@ int client(char * address, char * port, char * data, char * filepath, int connec
                 perror("read data socket");
                 close(acceptedfd);
                 close(filefd);
-                break;
+                return 10;
             }
             if (write(filefd, buf, count) == -1) {
                 perror("write data file");

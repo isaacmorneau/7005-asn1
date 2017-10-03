@@ -1,3 +1,18 @@
+/*
+ * SOURCE FILE: main.c - Parses arguments and runs either the server or client 
+ *
+ * PROGRAM: 70050Asn1
+ *
+ * DATE: Sept 26, 2017
+ *
+ * FUNCTIONS:
+ *      void print_help(void);
+ *      int main (int argc, char *argv[]);
+ *
+ * DESIGNER: Isaac Morneau
+ *
+ * PROGRAMMER: Isaac Morneau
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -12,7 +27,25 @@
 
 #define SOCKOPTS "cstrhp:d:a:f:"
 
-void print_help(){
+/*
+ *  FUNCTION: main
+ *
+ *  DATE: Sept 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      void print_help(void);
+ *
+ *  PARAMETERS:
+ *      void
+ *
+ *  RETURNS:
+ *  void
+ */
+void print_help(void){
     printf("usage options:\n"
             "\t[c]lient - set the mode to client\n"
             "\t[s]erver - set the mode to server\n"
@@ -25,6 +58,25 @@ void print_help(){
             "\t[h]elp - this message\n");
 }
 
+/*
+ *  FUNCTION: main
+ *
+ *  DATE: Sept 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int main (int argc, char *argv[]);
+ *
+ *  PARAMETERS:
+ *      int argc     - The number of arguments
+ *      char *argv[] - The arguments passed
+ *
+ *  RETURNS:
+ *  int 0 for no error or positive int to indicate error
+ */
 int main (int argc, char *argv[]) {
     if (argc == 1) {
         print_help();

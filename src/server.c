@@ -1,3 +1,18 @@
+/*
+ * HEADER FILE: server.h - The core server components
+ *
+ * PROGRAM: 70050Asn1
+ *
+ * DATE: Sept 26, 2017
+ *
+ * FUNCTIONS:
+ *  int server(char * port, char * data);
+ *  void * downloadfile(void * pair);
+ *
+ * DESIGNER: Isaac Morneau
+ *
+ * PROGRAMMER: Isaac Morneau
+ */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
@@ -18,6 +33,25 @@
 #define MAXFDS 65636
 #define DEFAULT_BUF 1024
 
+/*
+ *  FUNCTION: server
+ *
+ *  DATE: Sept 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int server(char * port, char * data) {
+ *
+ *  PARAMETERS:
+ *      char * port     - The port to listen to for commands
+ *      char * data     - The data port for file transfers
+ *
+ *  RETURNS:
+ *  int - returns 0 for no error or positive int to indicate error
+ */
 int server(char * port, char * data) {
     int sfd, s;
     int efd;
@@ -255,6 +289,24 @@ int server(char * port, char * data) {
     return 0;
 }
 
+/*
+ *  FUNCTION: downloadfile
+ *
+ *  DATE: Oct 1, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int server(char * port, char * data);
+ *
+ *  PARAMETERS:
+ *      void * pair - expects a struct of sock_file_pair
+ *
+ *  RETURNS:
+ *  int - returns 0
+ */
 void * downloadfile(void * pair) {
     int filefd = ((sock_file_pair *)pair)->filefd;
     int sockfd = ((sock_file_pair *)pair)->sockfd;

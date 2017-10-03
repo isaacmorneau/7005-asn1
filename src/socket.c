@@ -1,3 +1,19 @@
+/*
+ * SOURCE FILE: socket.h - The wrappers for creating or modifying sockets
+ *
+ * PROGRAM: 70050Asn1
+ *
+ * DATE: Sept 26, 2017
+ *
+ * FUNCTIONS:
+ * int make_non_blocking(int sfd);
+ * int make_bound(char * port);
+ * int make_connected(char * address, char * port);
+ *
+ * DESIGNER: Isaac Morneau
+ *
+ * PROGRAMMER: Isaac Morneau
+ */
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -9,6 +25,24 @@
 
 #include "socket.h"
 
+/*
+ *  FUNCTION: make_non_blocking
+ *
+ *  DATE: Sept 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int make_non_blocking (int sfd);
+ *
+ *  PARAMETERS:
+ *      int sfd - the socket to operate on
+ *
+ *  RETURNS:
+ *  int - returns 0 for no error or -1 to indicate error
+ */
 int make_non_blocking (int sfd) {
     int flags, s;
 
@@ -28,6 +62,25 @@ int make_non_blocking (int sfd) {
     return 0;
 }
 
+/*
+ *  FUNCTION: make_connected
+ *
+ *  DATE: Sept 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int make_connected(char * address, char * port);
+ *
+ *  PARAMETERS:
+ *  char * address  - The address to connect to
+ *  char * port     - The port to connect on
+ *
+ *  RETURNS:
+ *  int - returns the socket for no error or -1 to indicate error
+ */
 int make_connected(char * address, char * port) {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
@@ -67,6 +120,24 @@ int make_connected(char * address, char * port) {
     return sfd;
 }
 
+/*
+ *  FUNCTION: make_bound
+ *
+ *  DATE: Sept 30, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int make_bound(char * port);
+ *
+ *  PARAMETERS:
+ *  char * port     - The port to listen on
+ *
+ *  RETURNS:
+ *  int - returns the socket for no error or -1 to indicate error
+ */
 int make_bound(char * port) {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
