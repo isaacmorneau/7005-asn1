@@ -59,9 +59,10 @@ int server(char * port, char * data) {
     events = calloc(MAXEVENTS, sizeof(event));
 
     //this is our lookup table for sockets
-    //currently uploading files, yes its huge
+    //currently uploading files and sockets that are command connections
+    //to data connectons, yes its huge
     //but this maintains an O(1) lookup at the cost
-    //of 256KB of mem.
+    //of 256KB of mem. so screw it
     sock_to_files = calloc(MAXFDS, sizeof(int));
 
 #pragma omp parallel
@@ -205,32 +206,29 @@ int server(char * port, char * data) {
                     int count = 0;
                     while(1) {
                         count = read(events[i].data.fd, buf, DEFAULT_BUF);
-                        printf("read\n");
+                        printf("Read %d\n", count);
                         if (count == 0) {
-                        printf("nothing\n");
                             if (errno != EAGAIN) {
+                                perror("read data socket")
                                 close(sock_to_files[events[i].data.fd]);
                                 close(events[i].data.fd);
                             }
                             break;
                         } else if (count == -1) {
-                        printf("errors\n");
                             if (errno != EAGAIN) {
                                 perror("read data socket");
                                 close(sock_to_files[events[i].data.fd]);
                                 close(events[i].data.fd);
-                                break;
                             }
+                            break;
                         }
-                        printf("writing\n");
+                        printf("Writing\n");
                         if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
-                        printf("errors\n");
                             perror("file write");
                             close(sock_to_files[events[i].data.fd]);
                             close(events[i].data.fd);
                             break;
                         }
-                        printf("Recieved %d\n", count);
                     }
                 }
             }

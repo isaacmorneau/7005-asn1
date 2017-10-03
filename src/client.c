@@ -90,24 +90,19 @@ int client(char * address, char * port, char * data, char * filepath, int connec
         //zero_copy_write(acceptedfd, filefd);
         char buf[DEFAULT_BUF];
         int count = 0;
-        int done = 0;
         while(1) {
             count = read(filefd, buf, DEFAULT_BUF);
             if (count == 0) {
                 close(filefd);
-                done = 1;
+                break;
             } else if (count == -1) {
                 if (errno != EAGAIN) {
                     perror("read data socket");
                     close(acceptedfd);
                     close(filefd);
-                    break;
                 }
-            }
-            if (done == 1) {
                 break;
             }
-            printf("Sent %d\n", count);
             if (write(acceptedfd, buf, count) == -1) {
                 perror("file write");
                 close(acceptedfd);
@@ -119,8 +114,8 @@ int client(char * address, char * port, char * data, char * filepath, int connec
         zero_copy_read(acceptedfd, filefd);
     }
 
+    printf("Cleaning Up\n");
     close(sockfd);
     close(acceptedfd);
-    printf("Cleaning Up\n");
     return 0;
 }
