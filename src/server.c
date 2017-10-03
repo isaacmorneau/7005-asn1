@@ -18,7 +18,7 @@
 #define MAXFDS 65636
 #define DEFAULT_BUF 1024
 
-int server(char * port) {
+int server(char * port, char * data) {
     int sfd, s;
     int efd;
     int * sock_to_files;
@@ -155,7 +155,7 @@ int server(char * port) {
                     if (output_fd == 1) { //its a command
                         buf[count] = 0;
 
-                        int datafd = make_reverse_connected(events[i].data.fd, port);
+                        int datafd = make_reverse_connected(events[i].data.fd, data);
 
                         if(datafd == -1) {
                             close(events[i].data.fd);

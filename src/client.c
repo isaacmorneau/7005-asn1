@@ -14,14 +14,14 @@
 
 #define DEFAULT_BUFF 1024
 
-int client(char * address, char * port, char * filepath, int connect_mode) {
+int client(char * address, char * port, char * data, char * filepath, int connect_mode) {
     int datafd, sockfd, acceptedfd, filefd;
     char buf[DEFAULT_BUFF];
     sockfd = make_connected(address, port);
     if (sockfd == -1) {
         return 1;
     }
-    datafd = make_bound(port);
+    datafd = make_bound(data);
     if (datafd == -1) {
         return 2;
     }

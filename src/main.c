@@ -10,13 +10,14 @@
 #include "server.h"
 #include "client.h"
 
-#define SOCKOPTS "cstrhp:a:f:"
+#define SOCKOPTS "cstrhp:d:a:f:"
 
 void print_help(){
     printf("usage options:\n"
             "\t[c]lient - set the mode to client\n"
             "\t[s]erver - set the mode to server\n"
-            "\t[p]ort <1-65535>> - the port to listen on for server, the port to recieve on for client\n"
+            "\t[p]ort <1-65535>> - the port to connect to for commands\n"
+            "\t[d]ata <1-65535>> - the port to connect to for data\n"
             "\t[a]ddress <ip or url> - only used by client for connecting to a server\n"
             "\t[t]ransmit - set connection mode to SEND\n"
             "\t[r]ecieve - set connection mode to GET\n"
@@ -36,6 +37,7 @@ int main (int argc, char *argv[]) {
     bool connect_mode = 0;
 
     char * port = 0;
+    char * data = 0;
     char * address = 0;
     char * file = 0;
 
@@ -49,6 +51,7 @@ int main (int argc, char *argv[]) {
             {"transmit",    no_argument,       0, 't' },
             {"recieve",     no_argument,       0, 'r' },
             {"port",        required_argument, 0, 'p' },
+            {"data",        required_argument, 0, 'd' },
             {"address",     required_argument, 0, 'a' },
             {"file",        required_argument, 0, 'f' },
             {0,             0,                 0, 0   }
@@ -84,9 +87,13 @@ int main (int argc, char *argv[]) {
                 connect_mode = 2;
                 printf("recieve\n");
                 break;
+            case 'd':
+                data = optarg;
+                printf("data port with value '%s'\n", optarg);
+                break;
             case 'p':
                 port = optarg;
-                printf("port with value '%s'\n", optarg);
+                printf("command port with value '%s'\n", optarg);
                 break;
             case 'a':
                 address = optarg;
@@ -105,9 +112,9 @@ int main (int argc, char *argv[]) {
     }
 
     if (server_mode) {
-        return server(port);
+        return server(port, data);
     } else if (client_mode && connect_mode) {
-        return client(address, port, file, connect_mode);
+        return client(address, port, data, file, connect_mode);
     } else {
         printf("Mode not specified, exiting\n");
         return -1;
