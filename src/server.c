@@ -13,7 +13,6 @@
 
 #include "server.h"
 #include "socket.h"
-#include "file.h"
 
 #define MAXEVENTS 64
 #define MAXFDS 65636

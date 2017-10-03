@@ -11,7 +11,6 @@
 
 #include "client.h"
 #include "socket.h"
-#include "file.h"
 
 #define DEFAULT_BUF 1024
 
