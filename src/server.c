@@ -1,5 +1,5 @@
 /*
- * HEADER FILE: server.h - The core server components
+ * SOURCE FILE: server.c - The core server components
  *
  * PROGRAM: 70050Asn1
  *

@@ -1,5 +1,5 @@
 /*
- * SOURCE FILE: main.c - Parses arguments and runs either the server or client 
+ * SOURCE FILE: main.c - Parses arguments and runs either the server or client
  *
  * PROGRAM: 70050Asn1
  *

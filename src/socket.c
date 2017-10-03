@@ -1,5 +1,5 @@
 /*
- * SOURCE FILE: socket.h - The wrappers for creating or modifying sockets
+ * SOURCE FILE: socket.c - The wrappers for creating or modifying sockets
  *
  * PROGRAM: 70050Asn1
  *
