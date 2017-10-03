@@ -168,7 +168,7 @@ int server(char * port, char * data) {
                         if (*buf == 'S') { // uploading a file
                             printf("uploading '%s'\n", (buf+2));
                             fp = fopen((buf+2), "w");
-                            if (fp = -1) {
+                            if (fp == 0) {
                                 perror("open");
                                 close(output_fd);
                                 close(events[i].data.fd);
