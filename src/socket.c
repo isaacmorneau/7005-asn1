@@ -85,8 +85,14 @@ int make_bound(char * port) {
 
     for (rp = result; rp != 0; rp = rp->ai_next) {
         sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (sfd == -1)
+        if (sfd == -1) {
             continue;
+        }
+        int enable = 1;
+        if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) == -1) {
+            perror("Socket options failed");
+            exit(EXIT_FAILURE);
+        }
 
         s = bind(sfd, rp->ai_addr, rp->ai_addrlen);
         if (s == 0) {

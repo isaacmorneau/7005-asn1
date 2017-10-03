@@ -113,6 +113,7 @@ int server(char * port, char * data) {
                         close(infd);
                         break;
                     }
+                    printf("Established reverse connection to client on port %s",data);
 
                     sock_to_files[infd] = -1 * datafd;
 
@@ -144,7 +145,7 @@ int server(char * port, char * data) {
                         ssize_t count;
                         char buf[DEFAULT_BUF];
 
-                        count = read(events[i].data.fd, buf, sizeof buf);
+                        count = read(events[i].data.fd, buf, DEFAULT_BUF);
                         if (count == -1) {
                             // If errno == EAGAIN, that means we have read all
                             // data. So go back to the main loop.
@@ -203,7 +204,7 @@ int server(char * port, char * data) {
                     char buf[DEFAULT_BUF];
                     int count = 0;
                     while(1) {
-                        count = read(events[i].data.fd, buf, sizeof buf);
+                        count = read(events[i].data.fd, buf, DEFAULT_BUF);
                         if (count == 0) {
                             close(sock_to_files[events[i].data.fd]);
                             close(events[i].data.fd);

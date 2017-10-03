@@ -69,7 +69,7 @@ int main (int argc, char *argv[]) {
                     return 1;
                 }
                 client_mode = 1;
-                printf("client\n");
+                printf("Client\n");
                 break;
             case 's':
                 if (client_mode) {
@@ -77,31 +77,31 @@ int main (int argc, char *argv[]) {
                     return 1;
                 }
                 server_mode = 1;
-                printf("server\n");
+                printf("Server\n");
                 break;
             case 't':
                 connect_mode = 1;
-                printf("transmit\n");
+                printf("Transmit\n");
                 break;
             case 'r':
                 connect_mode = 2;
-                printf("recieve\n");
+                printf("Recieve\n");
                 break;
             case 'd':
                 data = optarg;
-                printf("data port with value '%s'\n", optarg);
+                printf("Data port with value '%s'\n", optarg);
                 break;
             case 'p':
                 port = optarg;
-                printf("command port with value '%s'\n", optarg);
+                printf("Command port with value '%s'\n", optarg);
                 break;
             case 'a':
                 address = optarg;
-                printf("address with value '%s'\n", optarg);
+                printf("Address with value '%s'\n", optarg);
                 break;
             case 'f':
                 file = optarg;
-                printf("file with value '%s'\n", optarg);
+                printf("File with value '%s'\n", optarg);
                 break;
             case 'h':
             case '?':

@@ -47,16 +47,19 @@ int client(char * address, char * port, char * data, char * filepath, int connec
         return 4;
     }
     close(datafd);
+    printf("Server Connected\n");
 
 
+    FILE * fp;
     if (connect_mode == 1) {//send
-        filefd = fileno(fopen(filepath, "r"));
-        if (filefd == -1) {
-            perror("open");
+        fp = fopen(filepath, "r");
+        if (fp == 0) {
+            perror("fopen");
             close(sockfd);
             close(datafd);
             return 5;
         }
+        filefd = fileno(fp);
         sprintf(buf, "S %s", filepath);
         if (write(sockfd, buf, strlen(buf)) == -1) {
             perror("write");
@@ -65,13 +68,14 @@ int client(char * address, char * port, char * data, char * filepath, int connec
             return 6;
         }
     } else if (connect_mode == 2) {//request
-        filefd = fileno(fopen(filepath, "w"));
-        if (filefd == -1) {
-            perror("open");
+        fp = fopen(filepath, "w");
+        if (fp == 0) {
+            perror("fopen");
             close(sockfd);
             close(datafd);
-            return 7;
+            return 5;
         }
+        filefd = fileno(fp);
         sprintf(buf, "G %s", filepath);
         if (write(sockfd, buf, strlen(buf)) == -1) {
             perror("write");
@@ -88,7 +92,7 @@ int client(char * address, char * port, char * data, char * filepath, int connec
         int count = 0;
         int done = 0;
         while(1) {
-            count = read(filefd, buf, sizeof buf);
+            count = read(filefd, buf, DEFAULT_BUF);
             if (count == 0) {
                 close(filefd);
                 done = 1;
@@ -100,13 +104,14 @@ int client(char * address, char * port, char * data, char * filepath, int connec
                     break;
                 }
             }
+            if (done == 1) {
+                break;
+            }
+            printf("Sent %d\n", count);
             if (write(acceptedfd, buf, count) == -1) {
                 perror("file write");
                 close(acceptedfd);
                 close(filefd);
-                break;
-            }
-            if (done == 1) {
                 break;
             }
         }
