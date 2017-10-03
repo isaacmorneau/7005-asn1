@@ -113,7 +113,7 @@ int server(char * port, char * data) {
                         close(infd);
                         break;
                     }
-                    printf("Established reverse connection to client on port %s",data);
+                    printf("Established reverse connection to client on port %s\n",data);
 
                     sock_to_files[infd] = -1 * datafd;
 
@@ -205,11 +205,14 @@ int server(char * port, char * data) {
                     int count = 0;
                     while(1) {
                         count = read(events[i].data.fd, buf, DEFAULT_BUF);
+                        printf("1\n");
                         if (count == 0) {
+                        printf("2\n");
                             close(sock_to_files[events[i].data.fd]);
                             close(events[i].data.fd);
                             break;
                         } else if (count == -1) {
+                        printf("3\n");
                             if (errno != EAGAIN) {
                                 perror("read data socket");
                                 close(sock_to_files[events[i].data.fd]);
@@ -217,12 +220,15 @@ int server(char * port, char * data) {
                                 break;
                             }
                         }
+                        printf("4\n");
                         if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
+                        printf("5\n");
                             perror("file write");
                             close(sock_to_files[events[i].data.fd]);
                             close(events[i].data.fd);
                             break;
                         }
+                        printf("Recieved %d\n", count);
                     }
                 }
             }
