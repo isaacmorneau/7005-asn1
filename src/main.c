@@ -28,7 +28,7 @@
 #define SOCKOPTS "cstrhp:d:a:f:"
 
 /*
- *  FUNCTION: main
+ *  FUNCTION: print_help
  *
  *  DATE: Sept 30, 2017
  *
