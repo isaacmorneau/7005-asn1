@@ -84,7 +84,7 @@ int server(char * port, char * data) {
                 while (1) {
                     struct sockaddr in_addr;
                     socklen_t in_len;
-                    int infd;
+                    int infd, datafd;
                     char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 
                     in_len = sizeof in_addr;
@@ -106,6 +106,16 @@ int server(char * port, char * data) {
                                 "(host=%s, port=%s)\n", infd, hbuf, sbuf);
                     }
 
+                    //if the data connection fails kill the client and let them reconnect
+                    datafd = make_connected(hbuf, data);
+                    if (datafd == -1) {
+                        close(datafd);
+                        close(infd);
+                        break;
+                    }
+
+                    sock_to_files[infd] = -1 * datafd;
+
                     // Make the incoming socket non-blocking and add it to the
                     // list of fds to monitor.
                     s = make_non_blocking(infd);
@@ -125,50 +135,58 @@ int server(char * port, char * data) {
             } else {
                 int done = 0;
                 int output_fd;
+                //check for open file or data socket
+                //if the value is negative it points to the data socket and this is a command socket
+                //if the value is positive this is a data socket and it points to an open file
+                if ((output_fd = sock_to_files[events[i].data.fd]) < 0) {
+                    output_fd *= -1;
+                    while (1) {
+                        ssize_t count;
+                        char buf[DEFAULT_BUF];
 
-                //if there is not currently a file open for writing then
-                //echo it to output
-                if (!(output_fd = sock_to_files[events[i].data.fd])) {
-                    output_fd = 1;//1 default echo to stdout
-                }
-
-                while (1) {
-                    ssize_t count;
-                    char buf[DEFAULT_BUF];
-
-                    count = read(events[i].data.fd, buf, sizeof buf);
-                    if (count == -1) {
-                        // If errno == EAGAIN, that means we have read all
-                        // data. So go back to the main loop.
-                        if (errno != EAGAIN) {
-                            perror("read");
-                            done = 1;
+                        count = read(events[i].data.fd, buf, sizeof buf);
+                        if (count == -1) {
+                            // If errno == EAGAIN, that means we have read all
+                            // data. So go back to the main loop.
+                            if (errno != EAGAIN) {
+                                perror("read");
+                                close(events[i].data.fd);
+                            }
+                            break;
+                        } else if (count == 0) {
+                            //remote closed the connection
+                            close(events[i].data.fd);
+                            break;
                         }
-                        break;
-                    } else if (count == 0) {
-                        // End of file. The remote has closed the
-                        // connection.
-                        done = 1;
-                        break;
-                    }
 
-                    if (output_fd == 1) { //its a command
                         buf[count] = 0;
 
-                        int datafd = make_reverse_connected(events[i].data.fd, data);
-
-                        if(datafd == -1) {
-                            close(events[i].data.fd);
-                            continue;
-                        }
+                        //now that a command has come in we can decide if we need to assign this reverse connection
+                        //a reading or writing task
 
                         if (*buf == 'S') { // uploading a file
                             printf("uploading '%s'\n", (buf+2));
-                            s = sock_to_files[datafd] = fileno(fopen((buf+2), "w"));
+                            s = sock_to_files[output_fd] = fileno(fopen((buf+2), "w"));
                             if (s = -1) {
                                 perror("open");
+                                close(output_fd);
                                 close(events[i].data.fd);
-                                continue;
+                                break;
+                            }
+                            s = make_non_blocking(output_fd);
+                            if (s == -1) {
+                                close(output_fd);
+                                close(events[i].data.fd);
+                                break;
+                            }
+
+                            //data connection setup was successful, listen for incomming data
+                            event.data.fd = output_fd;
+                            event.events = EPOLLIN | EPOLLET;
+                            s = epoll_ctl(efd, EPOLL_CTL_ADD, output_fd, &event);
+                            if (s == -1) {
+                                perror("epoll_ctl");
+                                abort();
                             }
                         } else if (*buf == 'G') {//downloading a file
                             //spawn off a thread to download the whole file blocking
@@ -176,16 +194,30 @@ int server(char * port, char * data) {
                             printf("Malformed request: '%s'", buf);
                         }
                     }
-                    zero_copy_read(events[i].data.fd, sock_to_files[events[i].data.fd]);
-                }
-
-                if (done) {
-                    printf("Closed connection on descriptor %d\n",
-                            events[i].data.fd);
-
-                    // Closing the descriptor will make epoll remove it
-                    // from the set of descriptors which are monitored.
-                    close(events[i].data.fd);
+                } else {//since its incomming data it must be an upload
+                    //implement zero copy read if time permits
+                    //zero_copy_read(events[i].data.fd, sock_to_files[events[i].data.fd]);
+                    char buf[DEFAULT_BUF];
+                    int count = 0;
+                    while(1) {
+                        count = read(events[i].data.fd, buf, sizeof buf);
+                        if (count == 0) {
+                            close(sock_to_files[events[i].data.fd]);
+                            close(events[i].data.fd);
+                            break;
+                        } else if (count == -1) {
+                            perror("read data socket");
+                            close(sock_to_files[events[i].data.fd]);
+                            close(events[i].data.fd);
+                            break;
+                        }
+                        if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
+                            perror("file write");
+                            close(sock_to_files[events[i].data.fd]);
+                            close(events[i].data.fd);
+                            break;
+                        }
+                    }
                 }
             }
         }
