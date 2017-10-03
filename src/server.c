@@ -205,14 +205,16 @@ int server(char * port, char * data) {
                     int count = 0;
                     while(1) {
                         count = read(events[i].data.fd, buf, DEFAULT_BUF);
-                        printf("1\n");
+                        printf("read\n");
                         if (count == 0) {
-                        printf("2\n");
-                            close(sock_to_files[events[i].data.fd]);
-                            close(events[i].data.fd);
+                        printf("nothing\n");
+                            if (errno != EAGAIN) {
+                                close(sock_to_files[events[i].data.fd]);
+                                close(events[i].data.fd);
+                            }
                             break;
                         } else if (count == -1) {
-                        printf("3\n");
+                        printf("errors\n");
                             if (errno != EAGAIN) {
                                 perror("read data socket");
                                 close(sock_to_files[events[i].data.fd]);
@@ -220,9 +222,9 @@ int server(char * port, char * data) {
                                 break;
                             }
                         }
-                        printf("4\n");
+                        printf("writing\n");
                         if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
-                        printf("5\n");
+                        printf("errors\n");
                             perror("file write");
                             close(sock_to_files[events[i].data.fd]);
                             close(events[i].data.fd);
