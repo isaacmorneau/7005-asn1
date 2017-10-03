@@ -209,10 +209,12 @@ int server(char * port, char * data) {
                             close(events[i].data.fd);
                             break;
                         } else if (count == -1) {
-                            perror("read data socket");
-                            close(sock_to_files[events[i].data.fd]);
-                            close(events[i].data.fd);
-                            break;
+                            if (errno != EAGAIN) {
+                                perror("read data socket");
+                                close(sock_to_files[events[i].data.fd]);
+                                close(events[i].data.fd);
+                                break;
+                            }
                         }
                         if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
                             perror("file write");

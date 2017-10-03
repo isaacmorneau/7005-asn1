@@ -7,16 +7,17 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "client.h"
 #include "socket.h"
 #include "file.h"
 
-#define DEFAULT_BUFF 1024
+#define DEFAULT_BUF 1024
 
 int client(char * address, char * port, char * data, char * filepath, int connect_mode) {
     int datafd, sockfd, acceptedfd, filefd;
-    char buf[DEFAULT_BUFF];
+    char buf[DEFAULT_BUF];
     printf("Connecting\n");
     sockfd = make_connected(address, port);
     if (sockfd == -1) {
@@ -82,7 +83,33 @@ int client(char * address, char * port, char * data, char * filepath, int connec
 
     printf("Started File Trasfer\n");
     if (connect_mode == 1) { //send
-        zero_copy_write(acceptedfd, filefd);
+        //zero_copy_write(acceptedfd, filefd);
+        char buf[DEFAULT_BUF];
+        int count = 0;
+        int done = 0;
+        while(1) {
+            count = read(filefd, buf, sizeof buf);
+            if (count == 0) {
+                close(filefd);
+                done = 1;
+            } else if (count == -1) {
+                if (errno != EAGAIN) {
+                    perror("read data socket");
+                    close(acceptedfd);
+                    close(filefd);
+                    break;
+                }
+            }
+            if (write(acceptedfd, buf, count) == -1) {
+                perror("file write");
+                close(acceptedfd);
+                close(filefd);
+                break;
+            }
+            if (done == 1) {
+                break;
+            }
+        }
     } else { //get
         zero_copy_read(acceptedfd, filefd);
     }
