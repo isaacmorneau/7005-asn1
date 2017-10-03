@@ -164,15 +164,17 @@ int server(char * port, char * data) {
                         //now that a command has come in we can decide if we need to assign this reverse connection
                         //a reading or writing task
 
+                        FILE * fp;
                         if (*buf == 'S') { // uploading a file
                             printf("uploading '%s'\n", (buf+2));
-                            s = sock_to_files[output_fd] = fileno(fopen((buf+2), "w"));
-                            if (s = -1) {
+                            fp = fopen((buf+2), "w");
+                            if (fp = -1) {
                                 perror("open");
                                 close(output_fd);
                                 close(events[i].data.fd);
                                 break;
                             }
+                            sock_to_files[output_fd] = fileno(fp);
                             s = make_non_blocking(output_fd);
                             if (s == -1) {
                                 close(output_fd);
@@ -190,6 +192,7 @@ int server(char * port, char * data) {
                             }
                         } else if (*buf == 'G') {//downloading a file
                             //spawn off a thread to download the whole file blocking
+                            printf("[get not yet implemented]\n");
                         } else {
                             printf("Malformed request: '%s'", buf);
                         }
