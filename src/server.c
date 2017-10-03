@@ -258,7 +258,6 @@ int server(char * port, char * data) {
                     int count = 0;
                     while(1) {
                         count = read(events[i].data.fd, buf, DEFAULT_BUF);
-                        printf("Read %d\n", count);
                         if (count == 0) {
                             close(sock_to_files[events[i].data.fd]);
                             close(events[i].data.fd);
@@ -271,7 +270,6 @@ int server(char * port, char * data) {
                             }
                             break;
                         }
-                        printf("Writing\n");
                         if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
                             perror("file write");
                             close(sock_to_files[events[i].data.fd]);
