@@ -34,7 +34,7 @@ int main (int argc, char *argv[]) {
 
     bool server_mode = 0;
     bool client_mode = 0;
-    bool connect_mode = 0;
+    int connect_mode = 0;
 
     char * port = 0;
     char * data = 0;

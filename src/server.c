@@ -227,11 +227,8 @@ int server(char * port, char * data) {
                         count = read(events[i].data.fd, buf, DEFAULT_BUF);
                         printf("Read %d\n", count);
                         if (count == 0) {
-                            if (errno != EAGAIN) {
-                                perror("read data socket");
-                                close(sock_to_files[events[i].data.fd]);
-                                close(events[i].data.fd);
-                            }
+                            close(sock_to_files[events[i].data.fd]);
+                            close(events[i].data.fd);
                             break;
                         } else if (count == -1) {
                             if (errno != EAGAIN) {

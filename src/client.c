@@ -54,7 +54,7 @@ int client(char * address, char * port, char * data, char * filepath, int connec
     if (connect_mode == 1) {//send
         fp = fopen(filepath, "r");
         if (fp == 0) {
-            perror("fopen");
+            perror("fopen read");
             close(sockfd);
             close(datafd);
             return 5;
@@ -70,7 +70,7 @@ int client(char * address, char * port, char * data, char * filepath, int connec
     } else if (connect_mode == 2) {//request
         fp = fopen(filepath, "w");
         if (fp == 0) {
-            perror("fopen");
+            perror("fopen write");
             close(sockfd);
             close(datafd);
             return 5;
