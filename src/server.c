@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <omp.h>
 
 #include "server.h"
@@ -193,8 +194,26 @@ int server(char * port, char * data) {
                                 abort();
                             }
                         } else if (*buf == 'G') {//downloading a file
-                            //spawn off a thread to download the whole file blocking
-                            printf("[get not yet implemented]\n");
+                            printf("downloading '%s'\n", (buf+2));
+                            fp = fopen((buf+2), "r");
+                            if (fp == 0) {
+                                perror("open");
+                                close(output_fd);
+                                close(events[i].data.fd);
+                                break;
+                            }
+                            pthread_t pt_id;
+                            sock_file_pair pair;
+                            pair.filefd = fileno(fp);
+                            pair.sockfd = output_fd;
+                            if (pthread_create(&pt_id, 0, downloadfile, (void *)&pair)) {
+                                perror("pthread_create");
+                                abort();
+                            }
+                            if (pthread_detach(pt_id)) {
+                                perror("pthread_detach");
+                                abort();
+                            }
                         } else {
                             printf("Malformed request: '%s'", buf);
                         }
@@ -237,5 +256,29 @@ int server(char * port, char * data) {
     free(sock_to_files);
     free(events);
     close(sfd);
+    return 0;
+}
+
+void * downloadfile(void * pair) {
+    int filefd = ((sock_file_pair *)pair)->filefd;
+    int sockfd = ((sock_file_pair *)pair)->sockfd;
+    char buf[DEFAULT_BUF];
+    int count = 0;
+    while(1) {
+        count = read(filefd, buf, DEFAULT_BUF);
+        if (count == 0) { //end of file
+            close(filefd);
+            break;
+        } else if (count == -1) {
+            perror("read data file");
+            break;
+        }
+        if (write(sockfd, buf, count) == -1) {
+            perror("write data socket");
+            break;
+        }
+    }
+    close(sockfd);
+    close(filefd);
     return 0;
 }

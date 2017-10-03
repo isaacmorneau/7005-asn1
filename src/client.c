@@ -87,31 +87,47 @@ int client(char * address, char * port, char * data, char * filepath, int connec
 
     printf("Started File Trasfer\n");
     if (connect_mode == 1) { //send
-        //zero_copy_write(acceptedfd, filefd);
         char buf[DEFAULT_BUF];
         int count = 0;
         while(1) {
             count = read(filefd, buf, DEFAULT_BUF);
-            if (count == 0) {
+            if (count == 0) { //end of file
                 close(filefd);
                 break;
             } else if (count == -1) {
-                if (errno != EAGAIN) {
-                    perror("read data socket");
-                    close(acceptedfd);
-                    close(filefd);
-                }
+                perror("read data file");
+                close(acceptedfd);
+                close(filefd);
                 break;
             }
             if (write(acceptedfd, buf, count) == -1) {
-                perror("file write");
+                perror("write data socket");
                 close(acceptedfd);
                 close(filefd);
                 break;
             }
         }
     } else { //get
-        zero_copy_read(acceptedfd, filefd);
+        char buf[DEFAULT_BUF];
+        int count = 0;
+        while(1) {
+            count = read(acceptedfd, buf, DEFAULT_BUF);
+            if (count == 0) { //end of stream
+                close(acceptedfd);
+                break;
+            } else if (count == -1) {
+                perror("read data socket");
+                close(acceptedfd);
+                close(filefd);
+                break;
+            }
+            if (write(filefd, buf, count) == -1) {
+                perror("write data file");
+                close(acceptedfd);
+                close(filefd);
+                break;
+            }
+        }
     }
 
     printf("Cleaning Up\n");
