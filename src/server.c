@@ -261,6 +261,7 @@ void * downloadfile(void * pair) {
     int sockfd = ((sock_file_pair *)pair)->sockfd;
     char buf[DEFAULT_BUF];
     int count = 0;
+    printf("Starting file download\n");
     while(1) {
         count = read(filefd, buf, DEFAULT_BUF);
         if (count == 0) { //end of file
@@ -275,6 +276,7 @@ void * downloadfile(void * pair) {
             break;
         }
     }
+    printf("Download complete\n");
     close(sockfd);
     close(filefd);
     return 0;
