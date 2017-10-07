@@ -1,3 +1,17 @@
+/*
+ * SOURCE FILE: file.c - Kernel level file descriptor copying
+ *
+ * PROGRAM: 70050Asn1
+ *
+ * DATE: Oct 6, 2017
+ *
+ * FUNCTIONS:
+ *  int kernel_copy(int infd, int outfd);
+ *
+ * DESIGNER: Isaac Morneau
+ *
+ * PROGRAMMER: Isaac Morneau
+ */
 #define _GNU_SOURCE
 #include <sys/types.h>
 #include <string.h>
@@ -15,6 +29,25 @@
 //default page size in linux
 #define DEFAULT_PAGE 4096
 
+/*
+ *  FUNCTION: kernel_copy
+ *
+ *  DATE: Oct 6, 2017
+ *
+ *  DESIGNER: Isaac Morneau
+ *
+ *  PROGRAMMER: Isaac Morneau
+ *
+ *  INTERFACE:
+ *      int kernel_copy(int infd, int outfd);
+ *
+ *  PARAMETERS:
+ *      int infd  - The file descriptor to read from
+ *      int outfd - The file descriptor to write to
+ *
+ *  RETURNS:
+ *  int - returns 0 for again, 1 for no error or -1 for error
+ */
 int kernel_copy(int infd, int outfd) {
     int filedes[2];
     int count = -1;
@@ -49,3 +82,4 @@ int kernel_copy(int infd, int outfd) {
     }
     return 1;
 }
+
