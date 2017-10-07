@@ -16,10 +16,8 @@
 #define DEFAULT_PAGE 4096
 
 int kernel_copy(int infd, int outfd) {
-    loff_t in_off = 0;
-    loff_t out_off = 0;
     int filedes[2];
-    int err = -1;
+    int count = -1;
     int finished = 0;
     if(pipe(filedes) < 0) {
         perror("pipe");
@@ -27,18 +25,22 @@ int kernel_copy(int infd, int outfd) {
     }
 
     while (!finished) {
-        err = splice(infd, &in_off, filedes[1], 0, DEFAULT_PAGE, SPLICE_F_MOVE | SPLICE_F_MORE);
-        if (err == -1) {
-            perror("splice");
-            close(filedes[0]);
-            close(filedes[1]);
-            return -1;
-        } else if (err == 0) {
+        count = splice(infd, 0, filedes[1], 0, DEFAULT_PAGE, SPLICE_F_MOVE | SPLICE_F_MORE);
+        if (count == -1) {
+            if (errno != EAGAIN) {
+                perror("splice");
+                close(filedes[0]);
+                close(filedes[1]);
+                return -1;
+            } else {
+                return 0;
+            }
+        } else if (count == 0) {
             //finished reading
             finished = 1;
         }
-        err = splice(filedes[0], 0, outfd, &out_off, DEFAULT_PAGE, SPLICE_F_MOVE | SPLICE_F_MORE);
-        if (err == -1) {
+        count = splice(filedes[0], 0, outfd, 0, count, SPLICE_F_MOVE | SPLICE_F_MORE);
+        if (count == -1) {
             perror("splice2");
             close(filedes[0]);
             close(filedes[1]);
