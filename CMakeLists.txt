@@ -28,6 +28,8 @@ set(MAIN
     src/server.h
     src/client.c
     src/client.h
+    src/file.c
+    src/file.h
     )
 
 add_executable(7005-Asn1 ${MAIN})

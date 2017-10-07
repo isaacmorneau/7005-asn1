@@ -28,6 +28,7 @@
 
 #include "server.h"
 #include "socket.h"
+#include "file.h"
 
 #define MAXEVENTS 64
 #define MAXFDS 65636
@@ -253,30 +254,7 @@ int server(char * port, char * data) {
                     }
                 } else {//since its incomming data it must be an upload
                     //implement zero copy read if time permits
-                    //zero_copy_read(events[i].data.fd, sock_to_files[events[i].data.fd]);
-                    char buf[DEFAULT_BUF];
-                    int count = 0;
-                    while(1) {
-                        count = read(events[i].data.fd, buf, DEFAULT_BUF);
-                        if (count == 0) {
-                            close(sock_to_files[events[i].data.fd]);
-                            close(events[i].data.fd);
-                            break;
-                        } else if (count == -1) {
-                            if (errno != EAGAIN) {
-                                perror("read data socket");
-                                close(sock_to_files[events[i].data.fd]);
-                                close(events[i].data.fd);
-                            }
-                            break;
-                        }
-                        if (write(sock_to_files[events[i].data.fd], buf, count) == -1) {
-                            perror("file write");
-                            close(sock_to_files[events[i].data.fd]);
-                            close(events[i].data.fd);
-                            break;
-                        }
-                    }
+                    kernel_copy(events[i].data.fd, sock_to_files[events[i].data.fd]);
                 }
             }
         }
@@ -308,23 +286,8 @@ int server(char * port, char * data) {
 void * downloadfile(void * pair) {
     int filefd = ((sock_file_pair *)pair)->filefd;
     int sockfd = ((sock_file_pair *)pair)->sockfd;
-    char buf[DEFAULT_BUF];
-    int count = 0;
     printf("Starting file download\n");
-    while(1) {
-        count = read(filefd, buf, DEFAULT_BUF);
-        if (count == 0) { //end of file
-            close(filefd);
-            break;
-        } else if (count == -1) {
-            perror("read data file");
-            break;
-        }
-        if (write(sockfd, buf, count) == -1) {
-            perror("write data socket");
-            break;
-        }
-    }
+    kernel_copy(filefd, sockfd);
     printf("Download complete\n");
     close(sockfd);
     close(filefd);
