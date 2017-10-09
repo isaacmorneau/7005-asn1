@@ -249,12 +249,14 @@ int server(char * port, char * data) {
                                 abort();
                             }
                         } else {
-                            printf("Malformed request: '%s'", buf);
+                            printf("Malformed request: '%.*s'", count, buf);
                         }
                     }
                 } else {//since its incomming data it must be an upload
                     //implement zero copy read if time permits
-                    kernel_copy(events[i].data.fd, sock_to_files[events[i].data.fd]);
+                    if (kernel_copy(events[i].data.fd, sock_to_files[events[i].data.fd]) == -1) {
+                        close(sock_to_files[events[i].data.fd]);
+                    }
                 }
             }
         }

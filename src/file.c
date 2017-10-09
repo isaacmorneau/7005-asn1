@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 #include "file.h"
 
@@ -47,39 +48,40 @@
  *
  *  RETURNS:
  *  int - returns 0 for again, 1 for no error or -1 for error
+ *
+ *  NOTES:
+ *      Great read put me on to splice
+ *      http://yarchive.net/comp/linux/splice.html
  */
+
 int kernel_copy(int infd, int outfd) {
-    int filedes[2];
-    int count = -1;
-    int finished = 0;
-    if(pipe(filedes) < 0) {
+    int pipefd[2];
+    if(pipe(pipefd) < 0) {
         perror("pipe");
         return -1;
     }
 
-    while (!finished) {
-        count = splice(infd, 0, filedes[1], 0, DEFAULT_PAGE, SPLICE_F_MOVE | SPLICE_F_MORE);
-        if (count == -1) {
-            if (errno != EAGAIN) {
-                perror("splice");
-                close(filedes[0]);
-                close(filedes[1]);
-                return -1;
-            } else {
-                return 0;
-            }
-        } else if (count == 0) {
-            //finished reading
-            finished = 1;
+	while (1) {
+	    //read max standard pipe allocation size
+		int nr = splice(infd, 0, pipefd[1], 0, USHRT_MAX, SPLICE_F_MOVE | SPLICE_F_MORE | SPLICE_F_NONBLOCK);
+        if (nr == -1 && errno != EAGAIN) {
+            perror("splice");
         }
-        count = splice(filedes[0], 0, outfd, 0, count, SPLICE_F_MOVE | SPLICE_F_MORE);
-        if (count == -1) {
-            perror("splice2");
-            close(filedes[0]);
-            close(filedes[1]);
-            return -1;
+		if (nr <= 0) {
+			break;
         }
-    }
-    return 1;
+		do {
+			int ret = splice(pipefd[0], 0, outfd, 0, nr, SPLICE_F_MOVE | SPLICE_F_MORE);
+			if (ret <= 0) {
+			    if (ret == -1) {
+			        perror("splice2");
+                }
+				break;
+			}
+			nr -= ret;
+		} while (nr);
+	}
+	close(pipefd[0]);
+	close(pipefd[1]);
+    return 0;
 }
-
